@@ -5,8 +5,8 @@
 #include <sstream>
 #include "Record.h"
 
-const int MAX_NUM_RECORDS = 30, CORRECT_ID_LEN = 9, MIN_MODEL_LEN = 3, SETW_ID = 15, SETW_MODEL = 9, SETW_QUANTITY = 12, SETW_PRICE = 14;;
-//int SETW_NUM = 15;
+const int MAX_NUM_RECORDS = 30, CORRECT_ID_LEN = 9, MIN_MODEL_LEN = 3, SETW_ID = 15, SETW_MODEL = 9, SETW_QUANTITY = 12, SETW_PRICE = 14;
+
 const string INPUT_FILE_NAME = "test.txt", INVALID_REC_FILE_NAME = "InvalidRecords.txt";
 
 using namespace std;
@@ -187,16 +187,16 @@ bool IsValidID(string carID, string& errorMessage) {
 	if (!(is9CharLong && first2Alpha && next4AlphaNum && last3Num)) {
 		errorMessage += " Invalid ID [";
 		if (!is9CharLong) {
-			errorMessage += "The car ID must be 9 characters long ";
+			errorMessage += "The car ID must be 9 characters long. ";
 		}
 		if (!first2Alpha) {
-			errorMessage += "The first 2 characters must be Alpha (A-Z, letter O is not allowed) ";
+			errorMessage += "The first 2 characters must be Alpha (A-Z, letter O is not allowed). ";
 		}
 		if (!next4AlphaNum) {
-			errorMessage += "Characters 3-6 must be alphanumeric (A-Z, letter O is not allowed) ";
+			errorMessage += "Characters 3-6 must be alphanumeric (A-Z, letter O is not allowed). ";
 		}
 		if (!last3Num) {
-			errorMessage += " Characters 7-9 characters must be numeric (0-9).";
+			errorMessage += "Characters 7-9 characters must be numeric (0-9).";
 		}
 		errorMessage += "]";
 	}
@@ -220,13 +220,13 @@ bool IsValidModel(string model, string& errorMessage) {
 	if (!(isMin3CharLong && startsWithAlpha && isAlphaNum)) {
 		errorMessage += " Invalid Model [";
 		if (!isMin3CharLong) {
-			errorMessage += " The model name must be at least 3 characters long.";
+			errorMessage += "The model name must be at least 3 characters long. ";
 		}
 		if (!startsWithAlpha) {
-			errorMessage += " The name must start with a capital letter.";
+			errorMessage += "The name must start with a capital letter. ";
 		}
 		if (!isAlphaNum) {
-			errorMessage += " The name must consist of only alphanumeric characters.";
+			errorMessage += "The name must consist of only alphanumeric characters.";
 		}
 		errorMessage += "]";
 	}
@@ -236,7 +236,7 @@ bool IsValidModel(string model, string& errorMessage) {
 
 bool IsValidQuantity(int quantity, string& errorMessage) {
 	if (quantity < 0) {
-		errorMessage += " Invalid Quantity [The quantity must be greater than or equal to 0]";
+		errorMessage += " Invalid Quantity [The quantity must be greater than or equal to 0.]";
 	}
 	
 	return quantity >= 0;
@@ -244,7 +244,7 @@ bool IsValidQuantity(int quantity, string& errorMessage) {
 
 bool IsValidPrice(double price, string& errorMessage) {
 	if (price <= 5000.00) {
-		errorMessage += " Invalid Price [The Price must be greater than $5000.00]";
+		errorMessage += " Invalid Price [The Price must be greater than $5000.00.]";
 	}
 	return price > 5000.00;
 }
