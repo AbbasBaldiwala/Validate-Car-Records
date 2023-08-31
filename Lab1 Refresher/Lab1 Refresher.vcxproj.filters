@@ -23,7 +23,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Record.h">
+    <ClInclude Include="CarRecord.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

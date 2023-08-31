@@ -1,13 +1,13 @@
 #include <iostream>
 #include <sstream>
 #include <iomanip>
-#include "Record.h"
+#include "CarRecord.h" //rename
 
-int SETW_ID = 15, SETW_MODEL = 9, SETW_QUANTITY = 12, SETW_PRICE = 14;
+const int SETW_ID = 15, SETW_MODEL = 9, SETW_QUANTITY = 12, SETW_PRICE = 14;
 
 using namespace std;
 Record::Record() {
-	SetRecord("", "", -1, -1);
+	SetRecord("", "", 0, 0);
 }
 
 void Record::SetRecord(string ID, string modelName, int quantityOnHand, double cost) {
@@ -17,7 +17,9 @@ void Record::SetRecord(string ID, string modelName, int quantityOnHand, double c
 	price = cost;
 }
 
-Record::~Record() {}
+Record::~Record() {
+	SetRecord("n\a", "n\a", 0, 0);
+}
 
 Record& Record::operator=(const Record& other) {
 	if (this != &other) {
@@ -29,20 +31,8 @@ Record& Record::operator=(const Record& other) {
 	return *this;
 }
 
-string Record::toString() {
+string Record::toString() const{
 	stringstream ss;
 	ss << setw(SETW_ID) << left << carID << setw(SETW_MODEL) << model << setw(SETW_QUANTITY) << right << quantity << setw(SETW_PRICE) << fixed << setprecision(2) << price << endl;
 	return ss.str();
-}
-
-void Record::toUpper() {
-	string uppercaseString = "";
-	for (int i = 0; i < carID.length(); i++) {
-		char s = carID[i];
-		if (((s - 'a' >= 0) && (s - 'a' < 26))) {
-			s -= 32;
-		}
-		uppercaseString += s;
-	}
-	carID = uppercaseString;
 }

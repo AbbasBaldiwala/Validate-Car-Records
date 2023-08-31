@@ -131,7 +131,7 @@
     <ClCompile Include="Record.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Record.h" />
+    <ClInclude Include="CarRecord.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="InvalidRecords.txt" />
