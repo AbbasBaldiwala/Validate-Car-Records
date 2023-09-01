@@ -17,19 +17,19 @@ void Record::SetRecord(string ID, string modelName, int quantityOnHand, double c
 	price = cost;
 }
 
-Record::~Record() {
-	SetRecord("n\a", "n\a", 0, 0);
-}
-
-Record& Record::operator=(const Record& other) {
-	if (this != &other) {
-		carID = other.carID;
-		model = other.model;
-		quantity = other.quantity;
-		price = other.price;
-	}
-	return *this;
-}
+//Record::~Record() {
+//	SetRecord("n\a", "n\a", 0, 0);
+//}
+//
+//Record& Record::operator=(const Record& other) {
+//	if (this != &other) {
+//		carID = other.carID;
+//		model = other.model;
+//		quantity = other.quantity;
+//		price = other.price;
+//	}
+//	return *this;
+//}
 
 string Record::toString() const{
 	stringstream ss;

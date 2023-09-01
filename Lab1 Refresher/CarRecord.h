@@ -10,10 +10,10 @@ public:
 	Record();
 
 	
-	~Record();
+	//~Record();
 
-	
-	Record& operator=(const Record& other);
+	//
+	//Record& operator=(const Record& other);
 
 	//sets all the private variable
 	void SetRecord(string, string, int, double);
