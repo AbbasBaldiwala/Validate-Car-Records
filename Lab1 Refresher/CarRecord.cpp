@@ -1,7 +1,7 @@
 #include <iostream>
 #include <sstream>
 #include <iomanip>
-#include "CarRecord.h" //rename
+#include "CarRecord.h" 
 
 const int SETW_ID = 15, SETW_MODEL = 9, SETW_QUANTITY = 12, SETW_PRICE = 14;
 
@@ -16,20 +16,6 @@ void Record::SetRecord(string ID, string modelName, int quantityOnHand, double c
 	quantity = quantityOnHand;
 	price = cost;
 }
-
-//Record::~Record() {
-//	SetRecord("n\a", "n\a", 0, 0);
-//}
-//
-//Record& Record::operator=(const Record& other) {
-//	if (this != &other) {
-//		carID = other.carID;
-//		model = other.model;
-//		quantity = other.quantity;
-//		price = other.price;
-//	}
-//	return *this;
-//}
 
 string Record::toString() const{
 	stringstream ss;
