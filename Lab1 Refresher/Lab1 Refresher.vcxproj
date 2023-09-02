@@ -128,10 +128,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="CarRecord.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="CarRecord.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="InvalidRecords.txt" />

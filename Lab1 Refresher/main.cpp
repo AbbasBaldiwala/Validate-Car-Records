@@ -3,29 +3,55 @@
 #include <string>
 #include <iomanip>
 #include <sstream>
-#include "CarRecord.h"
 
 using namespace std;
-const int MAX_NUM_RECORDS = 30, 
-	SETW_ID = 15, SETW_MODEL = 9, SETW_QUANTITY = 12, SETW_PRICE = 14,
+const int MAX_NUM_RECORDS = 8, 
+	SETW_ID = 15, SETW_MODEL = 9, SETW_QUANTITY = 12, SETW_PRICE = 14, SETPRECISION = 2,
 	TABLE_LENGTH = SETW_ID + SETW_MODEL + SETW_PRICE + SETW_QUANTITY,
 	MIN_PRICE = 5000, MIN_QUANTITY = 0, MIN_MODEL_LEN = 3,
 	ID_CRIT_1_NUM_LETTERS = 2, ID_CRIT_2_NUM_ALPHANUMERIC = 4, ID_CRIT_3_NUM_DIGITS = 3,
-	CORRECT_ID_LEN = ID_CRIT_1_NUM_LETTERS + ID_CRIT_2_NUM_ALPHANUMERIC + ID_CRIT_3_NUM_DIGITS,
-	ASCII_OFFSET = 32;
+	CORRECT_ID_LEN = ID_CRIT_1_NUM_LETTERS + ID_CRIT_2_NUM_ALPHANUMERIC + ID_CRIT_3_NUM_DIGITS;
+
+class Record {
+public:
+	Record() {
+		SetRecord("", "", 0, 0);
+	}
+
+	void SetRecord(string ID, string modelName, int quantityOnHand, double cost) {
+		carID = ID;
+		model = modelName;
+		quantity = quantityOnHand;
+		price = cost;
+	}
+
+	string toString() const {
+		stringstream ss;
+		ss << setw(SETW_ID) << left << carID 
+			<< setw(SETW_MODEL) << model 
+			<< setw(SETW_QUANTITY) << right << quantity 
+			<< setw(SETW_PRICE) << fixed << setprecision(SETPRECISION) << price;
+		return ss.str();
+	}
+
+private:
+	string carID, model;
+	int quantity;
+	double price;
+};
 
 enum Menu {
 	PRINT_VALID = 1, PRINT_INVALID = 2, QUIT = 3
 };
 
 //Gets the data from the input file and writes all invalid data to error file
-void GetData(Record validRec[MAX_NUM_RECORDS], int& numValidRec, string errorFileName);
+void GetData(Record validRec[MAX_NUM_RECORDS], int& numValidRec, int& numInvalidRec, string errorFileName);
 
-//prints the valid records to the screen in table format
+//prints valid records to screen in table format
 void PrintValidRecords(const Record validRec[MAX_NUM_RECORDS], int numValidRec, string border, string header); 
 
-//prints the invalid records to the screen in table format
-void PrintInvalidRecords(string border, string header, string errorFileName);
+//prints invalid records to screen in table format
+void PrintInvalidRecords(string border, string header, string errorFileName, int numInvalid);
 
 bool IsValidID(string carID, string& errorMessage); //checks if the Car ID is valid
 
@@ -35,49 +61,49 @@ bool IsValidQuantity(int quantity, string& errorMessage); //checks if the quanti
 
 bool IsValidPrice(double price, string& errorMessage); //checks if the price is valid
 
-string toUpper(string str); //returns string converted to upper case
+string ToUpper(string str); //returns string converted to upper case
+
+void ClearInvalidInput(string errMsg); //clears cin, clears the keyboard buffer, prints an error message
 
 int main() {
-	int userChoice, numValidRec = 0;
+	int userChoice, numValidRec = 0, numInvalidRec = 0;
 	stringstream border, header;
 	Record validRecords[MAX_NUM_RECORDS];
 	string errorFileName = "InvalidRecords.txt";
-	GetData(validRecords, numValidRec, errorFileName);
+	GetData(validRecords, numValidRec, numInvalidRec, errorFileName);
 	
 	border << setfill('-') << setw(TABLE_LENGTH) << "";
-	header << setw(SETW_ID) << left << "Car ID" << setw(SETW_MODEL) << "Model" << setw(SETW_QUANTITY) << right << "Quantity" << setw(SETW_PRICE + 1) << right << "Price\n" << endl;
+	header << setw(SETW_ID) << left << "Car ID" << setw(SETW_MODEL) << "Model" << setw(SETW_QUANTITY) << right << "Quantity" << setw(SETW_PRICE+1) << "Price\n" << endl;
 	
 	do {
-		cout << "Choose one of the following options: \n"
-			"1. Print valid records\n"
-			"2. Print Invalid Records\n"
-			"3. Quit the program" << endl;
+		cout << "\n\nMENU: \n"
+			"1. PRINT VALID RECORDS\n"
+			"2. PRINT INVALID RECORDS\n"
+			"3. QUIT\n" << endl;
 		cin >> userChoice;
 		switch (userChoice) {
 		case PRINT_VALID:
 			PrintValidRecords(validRecords, numValidRec, border.str(), header.str());
 			break;
 		case PRINT_INVALID:
-			PrintInvalidRecords(border.str(), header.str(), errorFileName);
+			PrintInvalidRecords(border.str(), header.str(), errorFileName, numInvalidRec);
 			break;
 		case QUIT:
-			cout << "Exiting out of the program..." << endl;
+			cout << "\nQUITTING..." << endl;
 			break;
 		default:
-			cout << "INVALID MENU SELECTION" << endl;
-			cin.clear();
-			cin.ignore(numeric_limits<streamsize>::max(), '\n');
+			ClearInvalidInput("INVALID MENU SELECTION");
 		}
 	} while (userChoice != QUIT);
 	return 0;
 }
 
-void GetData(Record validRec[MAX_NUM_RECORDS], int& numValidRec, string errorFileName) {
-	string tempCarID, tempModel, errMsg = "", inputFileName = "test.txt";
+void GetData(Record validRec[MAX_NUM_RECORDS], int& numValidRec, int& numInvalidRec, string errorFileName) {
+	string tempCarID, tempModel, errMsg = "";
 	int tempQuantityOnHand;
 	double tempPrice;
 	bool isValidID, isValidModel, isValidQuantity, isValidPrice;
-	ifstream inFile(inputFileName);
+	ifstream inFile("test.txt");
 	ofstream errorFile(errorFileName);
 	Record temp;
 	if (!inFile) {
@@ -86,7 +112,7 @@ void GetData(Record validRec[MAX_NUM_RECORDS], int& numValidRec, string errorFil
 		exit(EXIT_FAILURE);
 	}	
 	if (!errorFile) {
-		cout << "Error file not found. Exiting the prgram." << endl;
+		cout << "Error file not found. Exiting the program." << endl;
 		inFile.close();
 		system("pause");
 		exit(EXIT_FAILURE);
@@ -99,8 +125,8 @@ void GetData(Record validRec[MAX_NUM_RECORDS], int& numValidRec, string errorFil
 	while (!inFile.eof() && numValidRec < MAX_NUM_RECORDS) { 
 		inFile >> tempCarID >> tempModel >> tempQuantityOnHand >> tempPrice;
 
-		tempCarID = toUpper(tempCarID);
-		tempModel = toUpper(tempModel);
+		tempCarID = ToUpper(tempCarID);
+		tempModel = ToUpper(tempModel);
 
 		errMsg = "";
 		isValidID = IsValidID(tempCarID, errMsg);
@@ -113,8 +139,11 @@ void GetData(Record validRec[MAX_NUM_RECORDS], int& numValidRec, string errorFil
 			numValidRec++;
 		}
 		else {
-			errorFile << setw(SETW_ID) << left << tempCarID  << setw(SETW_MODEL) << tempModel << setw(SETW_QUANTITY) << right 
-				<< tempQuantityOnHand  << setw(SETW_PRICE) << fixed << setprecision(2) << tempPrice << " " << errMsg << endl;
+			/*errorFile << setw(SETW_ID) << left << tempCarID  << setw(SETW_MODEL) << tempModel << setw(SETW_QUANTITY) << right 
+				<< tempQuantityOnHand  << setw(SETW_PRICE) << fixed << setprecision(SETPRECISION) << tempPrice << " " << errMsg << endl;*/
+			temp.SetRecord(tempCarID, tempModel, tempQuantityOnHand, tempPrice);
+			errorFile << temp.toString() << " " << errMsg << endl;
+			numInvalidRec++;
 		}
 	}
 
@@ -127,19 +156,19 @@ void GetData(Record validRec[MAX_NUM_RECORDS], int& numValidRec, string errorFil
 
 void PrintValidRecords(const Record validRec[MAX_NUM_RECORDS], int numValidRec, string border, string header) {
 	if (numValidRec == 0) {
-		cout << "NO VALID RECORDS FOUND.\n";
+		cout << "\nNO VALID RECORDS FOUND.\n";
 	}
 	else {
-		cout << "DISPLAYING VALID RECORDS (UNSORTED)...\n";
+		cout << "\nDISPLAYING " << numValidRec << " VALID RECORDS(UNSORTED)...\n";
 		cout << border << "\n" << header;
 		for (int i = 0; i < numValidRec; i++) {
-			cout << validRec[i].toString();
+			cout << validRec[i].toString() << endl;
 		}
 		cout << border << "\n";
 	}
 }
 
-void PrintInvalidRecords(string border, string header, string errorFileName) {
+void PrintInvalidRecords(string border, string header, string errorFileName, int numInvalidRec) {
 	ifstream invalidRecFile(errorFileName);
 	if (!invalidRecFile) {
 		cout << "Invalid Records file not found. Exiting the program." << endl;
@@ -147,10 +176,10 @@ void PrintInvalidRecords(string border, string header, string errorFileName) {
 		exit(EXIT_FAILURE);
 	}
 	if (invalidRecFile.peek() == EOF) { 
-		cout << "NO INVALID RECORDS FOUND\n";
+		cout << "\nNO INVALID RECORDS FOUND\n";
 	}
 	else {
-		cout << "DISPLAYING INVALID RECORDS...\n" 
+		cout << "\nDISPLAYING " << numInvalidRec << " INVALID RECORDS...\n" 
 			<< border << "\n" 
 			<< header;
 		string line;
@@ -235,24 +264,24 @@ bool IsValidModel(string model, string& errorMessage) {
 
 bool IsValidQuantity(int quantity, string& errorMessage) {
 	if (quantity < MIN_QUANTITY) {
-		errorMessage += "INVALID QUANTITY [Quantity must be greater than or equal to " + to_string(MIN_QUANTITY) + ".] ";
+		errorMessage += "INVALID QUANTITY [Can't be less than " + to_string(MIN_QUANTITY) + ".] ";
 	}
 	return quantity >= MIN_QUANTITY;
 }
 
 bool IsValidPrice(double price, string& errorMessage) {
 	if (price <= MIN_PRICE) {
-		errorMessage += "INVALID PRICE [Price must be greater than $" + to_string(MIN_PRICE) + ".] ";
+		errorMessage += "INVALID PRICE [Must be greater than $" + to_string(MIN_PRICE) + ".] ";
 	}
 	return price > MIN_PRICE;
 }
 
-string toUpper(string str) {
+string ToUpper(string str) {
 	string upperCaseStr = "";
 	for (int i = 0; i < str.length(); i++) {
 		char ch = str[i];
 		if (((ch >= 'a') && (ch <= 'z'))) {
-			ch -= ASCII_OFFSET; //converts char to uppercase
+			ch -= ('a' - 'A'); //converts char to upper case
 		}
 		upperCaseStr += ch;
 	}
@@ -260,22 +289,34 @@ string toUpper(string str) {
 	return upperCaseStr;
 }
 
+void ClearInvalidInput(string errMsg) {
+	cout << "\n" << errMsg << endl;
+	cin.clear();
+	cin.ignore(numeric_limits<streamsize>::max(), '\n');
+}
+
 //TEST RUNS
 
 // TEST #1 (Some Valid and Invalid Data)
 /*
-Choose one of the following options:
-1. Print valid records
-2. Print Invalid Records
-3. Quit the program
-jfdahsk
+MENU:
+1. PRINT VALID RECORDS
+2. PRINT INVALID RECORDS
+3. QUIT
+
+sdfdsa
+
 INVALID MENU SELECTION
-Choose one of the following options:
-1. Print valid records
-2. Print Invalid Records
-3. Quit the program
+
+
+MENU:
+1. PRINT VALID RECORDS
+2. PRINT INVALID RECORDS
+3. QUIT
+
 1
-DISPLAYING VALID RECORDS (UNSORTED)...
+
+DISPLAYING 10 VALID RECORDS(UNSORTED)...
 --------------------------------------------------
 Car ID         Model        Quantity         Price
 
@@ -290,39 +331,48 @@ HTG6T5679      LOTUS4              2     134535.73
 IAT67T964      SENTRA            110      25840.99
 KGYIG6765      FUSION5            22      19975.12
 --------------------------------------------------
-Choose one of the following options:
-1. Print valid records
-2. Print Invalid Records
-3. Quit the program
+
+
+MENU:
+1. PRINT VALID RECORDS
+2. PRINT INVALID RECORDS
+3. QUIT
+
 2
-DISPLAYING INVALID RECORDS...
+
+DISPLAYING 15 INVALID RECORDS...
 --------------------------------------------------
 Car ID         Model        Quantity         Price
 
-OANKGA123      CAMRY               0      21500.99 INVALID ID [ First 2 characters must be Alpha(A - Z, letter O is not allowed).]
-A1APP5122      CIVIC              20      15230.24 INVALID ID [ First 2 characters must be Alpha(A - Z, letter O is not allowed).]
-BG[ZUVABC      MUSTANG            14      50090.54 INVALID ID [ Characters 3-6 must be alphanumeric(A - Z, letter O is not allowed). Characters 7-9 must be numeric (0-9).]
-MK1O7836       GT6                 1     134520.73 INVALID ID [ Must be 9 characters long.]
-LP8E\V1599     CORVETTE            9      70540.81 INVALID ID [ Must be 9 characters long.]
-1EZNI;268      AL4               120      25340.99 INVALID ID [ First 2 characters must be Alpha(A - Z, letter O is not allowed). Characters 3-6 must be alphanumeric(A - Z, letter O is not allowed).]
-PQXGXCA56      SONATA            -36      19990.12 INVALID ID [ Characters 7-9 must be numeric (0-9).] INVALID QUANTITY [Quantity must be greater than or equal to 0.]
-DSN0DG7P5      OUTBACK            75     -26000.73 INVALID ID [ Characters 7-9 must be numeric (0-9).] INVALID PRICE [Price must be greater than $5000.]
-LLY13M39L      PACIFICA           90      28000.11 INVALID ID [ Characters 7-9 must be numeric (0-9).]
-CAX9UN74       MODEL3             30      48200.00 INVALID ID [ Must be 9 characters long.]
-ABÆ[SDF1234    L;X                 1       5000.01 INVALID ID [ Must be 9 characters long.] INVALID MODEL [ Must consist of only alphanumeric characters.]
-PDNKGA123      4CAMRY              0      21820.99 INVALID MODEL [ Must start with a letter.]
-AS2QQB593      CV                 20      12340.24 INVALID MODEL [Must be at least 3 characters long.]
-BGYZUV178      I8                 14      59990.54 INVALID MODEL [Must be at least 3 characters long.]
-MK1Q7U364      GT7                -3     127420.73 INVALID QUANTITY [Quantity must be greater than or equal to 0.]
-TEZNID268      ALTIMA            200     -20940.99 INVALID PRICE [Price must be greater than $5000.]
-PQXGXC756      HELLCAT            36       4999.99 INVALID PRICE [Price must be greater than $5000.]
+PSUSVF195      WRANGLER            7       1000.00 INVALID PRICE [Must be greater than $5000.]
+CB6P96365      ESCALADE           -1      99999.99 INVALID QUANTITY [Can't be less than 0.]
+ML8W6S179      JETTA              -4        234.00 INVALID QUANTITY [Can't be less than 0.] INVALID PRICE [Must be greater than $5000.]
+KHKQ95204      911                78      23145.00 INVALID MODEL [ Must start with a letter.]
+DW2NRB367      R:X                67          0.00 INVALID MODEL [ Must consist of only alphanumeric characters.] INVALID PRICE [Must be greater than $5000.]
+FU0R94012      2018CAMRY          -2       9999.00 INVALID MODEL [ Must start with a letter.] INVALID QUANTITY [Can't be less than 0.]
+XS4R45397      A4                 -4      -2342.00 INVALID MODEL [Must be at least 3 characters long.] INVALID QUANTITY [Can't be less than 0.] INVALID PRICE [Must be greater than $5000.]
+ALFOS5213      ROADSTER            2      12435.00 INVALID ID [ Characters 3-6 must be alphanumeric(A - Z, letter O is not allowed).]
+1B1293675      FOCUS             300       -324.00 INVALID ID [ First 2 characters must be Alpha(A - Z, letter O is not allowed).] INVALID PRICE [Must be greater than $5000.]
+123456789      CT250              -5      74829.00 INVALID ID [ First 2 characters must be Alpha(A - Z, letter O is not allowed).] INVALID QUANTITY [Can't be less than 0.]
+ABCDEFGHI      RAV4              -35         22.00 INVALID ID [ Characters 7-9 must be numeric (0-9).] INVALID QUANTITY [Can't be less than 0.] INVALID PRICE [Must be greater than $5000.]
+ALS;DA167      4RUBICON           92      30000.00 INVALID ID [ Characters 3-6 must be alphanumeric(A - Z, letter O is not allowed).] INVALID MODEL [ Must start with a letter.]
+GH32HS1232     A2                  6     -24000.00 INVALID ID [ Must be 9 characters long.] INVALID MODEL [Must be at least 3 characters long.] INVALID PRICE [Must be greater than $5000.]
+VD234019P      M4                 -3      60000.00 INVALID ID [ Characters 7-9 must be numeric (0-9).] INVALID MODEL [Must be at least 3 characters long.] INVALID QUANTITY [Can't be less than 0.]
+ABCDED7121     2FX               -96         -5.00 INVALID ID [ Must be 9 characters long.] INVALID MODEL [ Must start with a letter.] INVALID QUANTITY [Can't be less than 0.] INVALID PRICE [Must be greater than $5000.]
 --------------------------------------------------
-Choose one of the following options:
-1. Print valid records
-2. Print Invalid Records
-3. Quit the program
+
+
+MENU:
+1. PRINT VALID RECORDS
+2. PRINT INVALID RECORDS
+3. QUIT
+
 3
-Exiting out of the program...
+
+QUITTING...
+
+C:\Users\Abbas\source\repos\Lab1 Refresher\x64\Debug\Lab1 Refresher.exe (process 10644) exited with code 0.
+Press any key to close this window . . .
 */
 
 //TEST #2 (All invalid records)
@@ -368,12 +418,16 @@ Press any key to continue . . .
 //TEST #5 (More valid records than array could store)
 /*
 Not all Records have been stored; only the first 8 were processed.
-Choose one of the following options:
-1. Print valid records
-2. Print Invalid Records
-3. Quit the program
+
+
+MENU:
+1. PRINT VALID RECORDS
+2. PRINT INVALID RECORDS
+3. QUIT
+
 1
-DISPLAYING VALID RECORDS (UNSORTED)...
+
+DISPLAYING 8 VALID RECORDS(UNSORTED)...
 --------------------------------------------------
 Car ID         Model        Quantity         Price
 
@@ -386,39 +440,48 @@ PLT6HJ764      LAFERRARI          20      16780.24
 JGR5YG258      PRIUS              15      20090.54
 HTG6T5679      LOTUS4              2     134535.73
 --------------------------------------------------
-Choose one of the following options:
-1. Print valid records
-2. Print Invalid Records
-3. Quit the program
+
+
+MENU:
+1. PRINT VALID RECORDS
+2. PRINT INVALID RECORDS
+3. QUIT
+
 2
-DISPLAYING INVALID RECORDS...
+
+DISPLAYING 15 INVALID RECORDS...
 --------------------------------------------------
 Car ID         Model        Quantity         Price
 
-OANKGA123      CAMRY               0      21500.99 INVALID ID [ First 2 characters must be Alpha(A - Z, letter O is not allowed).]
-A1APP5122      CIVIC              20      15230.24 INVALID ID [ First 2 characters must be Alpha(A - Z, letter O is not allowed).]
-BG[ZUVABC      MUSTANG            14      50090.54 INVALID ID [ Characters 3-6 must be alphanumeric(A - Z, letter O is not allowed). Characters 7-9 must be numeric (0-9).]
-MK1O7836       GT6                 1     134520.73 INVALID ID [ Must be 9 characters long.]
-LP8E\V1599     CORVETTE            9      70540.81 INVALID ID [ Must be 9 characters long.]
-1EZNI;268      AL4               120      25340.99 INVALID ID [ First 2 characters must be Alpha(A - Z, letter O is not allowed). Characters 3-6 must be alphanumeric(A - Z, letter O is not allowed).]
-PQXGXCA56      SONATA            -36      19990.12 INVALID ID [ Characters 7-9 must be numeric (0-9).] INVALID QUANTITY [Quantity must be greater than or equal to 0.]
-DSN0DG7P5      OUTBACK            75     -26000.73 INVALID ID [ Characters 7-9 must be numeric (0-9).] INVALID PRICE [Price must be greater than $5000.]
-LLY13M39L      PACIFICA           90      28000.11 INVALID ID [ Characters 7-9 must be numeric (0-9).]
-CAX9UN74       MODEL3             30      48200.00 INVALID ID [ Must be 9 characters long.]
-ABÆ[SDF1234    LX                  1       5000.01 INVALID ID [ Must be 9 characters long.] INVALID MODEL [Must be at least 3 characters long.]
-PDNKGA123      4CAMRY              0      21820.99 INVALID MODEL [ Must start with a letter.]
-AS2QQB593      CV                 20      12340.24 INVALID MODEL [Must be at least 3 characters long.]
-BGYZUV178      I8                 14      59990.54 INVALID MODEL [Must be at least 3 characters long.]
-MK1Q7U364      GT7                -3     127420.73 INVALID QUANTITY [Quantity must be greater than or equal to 0.]
-TEZNID268      ALTIMA            200     -20940.99 INVALID PRICE [Price must be greater than $5000.]
-PQXGXC756      HELLCAT            36       4999.99 INVALID PRICE [Price must be greater than $5000.]
+PSUSVF195      WRANGLER            7       1000.00 INVALID PRICE [Must be greater than $5000.]
+CB6P96365      ESCALADE           -1      99999.99 INVALID QUANTITY [Can't be less than 0.]
+ML8W6S179      JETTA              -4        234.00 INVALID QUANTITY [Can't be less than 0.] INVALID PRICE [Must be greater than $5000.]
+KHKQ95204      911                78      23145.00 INVALID MODEL [ Must start with a letter.]
+DW2NRB367      R:X                67          0.00 INVALID MODEL [ Must consist of only alphanumeric characters.] INVALID PRICE [Must be greater than $5000.]
+FU0R94012      2018CAMRY          -2       9999.00 INVALID MODEL [ Must start with a letter.] INVALID QUANTITY [Can't be less than 0.]
+XS4R45397      A4                 -4      -2342.00 INVALID MODEL [Must be at least 3 characters long.] INVALID QUANTITY [Can't be less than 0.] INVALID PRICE [Must be greater than $5000.]
+ALFOS5213      ROADSTER            2      12435.00 INVALID ID [ Characters 3-6 must be alphanumeric(A - Z, letter O is not allowed).]
+1B1293675      FOCUS             300       -324.00 INVALID ID [ First 2 characters must be Alpha(A - Z, letter O is not allowed).] INVALID PRICE [Must be greater than $5000.]
+123456789      CT250              -5      74829.00 INVALID ID [ First 2 characters must be Alpha(A - Z, letter O is not allowed).] INVALID QUANTITY [Can't be less than 0.]
+ABCDEFGHI      RAV4              -35         22.00 INVALID ID [ Characters 7-9 must be numeric (0-9).] INVALID QUANTITY [Can't be less than 0.] INVALID PRICE [Must be greater than $5000.]
+ALS;DA167      4RUBICON           92      30000.00 INVALID ID [ Characters 3-6 must be alphanumeric(A - Z, letter O is not allowed).] INVALID MODEL [ Must start with a letter.]
+GH32HS1232     A2                  6     -24000.00 INVALID ID [ Must be 9 characters long.] INVALID MODEL [Must be at least 3 characters long.] INVALID PRICE [Must be greater than $5000.]
+VD234019P      M4                 -3      60000.00 INVALID ID [ Characters 7-9 must be numeric (0-9).] INVALID MODEL [Must be at least 3 characters long.] INVALID QUANTITY [Can't be less than 0.]
+ABCDED7121     2FX               -96         -5.00 INVALID ID [ Must be 9 characters long.] INVALID MODEL [ Must start with a letter.] INVALID QUANTITY [Can't be less than 0.] INVALID PRICE [Must be greater than $5000.]
 --------------------------------------------------
-Choose one of the following options:
-1. Print valid records
-2. Print Invalid Records
-3. Quit the program
+
+
+MENU:
+1. PRINT VALID RECORDS
+2. PRINT INVALID RECORDS
+3. QUIT
+
 3
-Exiting out of the program...
+
+QUITTING...
+
+C:\Users\Abbas\source\repos\Lab1 Refresher\x64\Debug\Lab1 Refresher.exe (process 15928) exited with code 0.
+Press any key to close this window . . .
 */
 
 //TEST #6 (input file not found)
