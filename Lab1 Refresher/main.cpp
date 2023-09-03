@@ -9,11 +9,12 @@ const int MAX_NUM_RECORDS = 30,
 	TABLE_LENGTH = SETW_ID + SETW_MODEL + SETW_PRICE + SETW_QUANTITY,
 	MIN_PRICE = 5000, MIN_QUANTITY = 0, MIN_MODEL_LEN = 3,
 	ID_CRIT_1_NUM_LETTERS = 2, ID_CRIT_2_NUM_ALPHANUMERIC = 4, ID_CRIT_3_NUM_DIGITS = 3,
-	CORRECT_ID_LEN = ID_CRIT_1_NUM_LETTERS + ID_CRIT_2_NUM_ALPHANUMERIC + ID_CRIT_3_NUM_DIGITS;
+	CORRECT_ID_LEN = ID_CRIT_1_NUM_LETTERS + ID_CRIT_2_NUM_ALPHANUMERIC + ID_CRIT_3_NUM_DIGITS,
+	LETTER_OFFSET_IN_ASCII = 32;
 
-class Record {
+class CarRecord {
 public:
-	Record() {
+	CarRecord() {
 		SetRecord("", "", 0, 0);
 	}
 
@@ -44,10 +45,10 @@ enum Menu {
 };
 
 //Gets the data from the input file and writes all invalid data to error file
-void GetData(Record validRec[MAX_NUM_RECORDS], int& numValidRec, int& numInvalidRec, string errorFileName);
+void GetData(CarRecord validRec[MAX_NUM_RECORDS], int& numValidRec, int& numInvalidRec, string errorFileName, string inputFileName);
 
 //prints valid records to screen in table format
-void PrintValidRecords(const Record validRec[MAX_NUM_RECORDS], int numValidRec, string border, string header); 
+void PrintValidRecords(const CarRecord validRec[MAX_NUM_RECORDS], int numValidRec, string border, string header); 
 
 //prints invalid records to screen in table format
 void PrintInvalidRecords(string border, string header, string errorFileName, int numInvalid);
@@ -67,9 +68,9 @@ void ClearInvalidInput(string errMsg); //clears cin, clears the keyboard buffer,
 int main() {
 	int userChoice, numValidRec = 0, numInvalidRec = 0;
 	stringstream border, header;
-	Record validRecords[MAX_NUM_RECORDS];
-	string errorFileName = "InvalidRecords.txt";
-	GetData(validRecords, numValidRec, numInvalidRec, errorFileName);
+	CarRecord validRecords[MAX_NUM_RECORDS];
+	string inputFileName = "test.txt", errorFileName = "InvalidRecords.txt";
+	GetData(validRecords, numValidRec, numInvalidRec, errorFileName, inputFileName);
 	
 	border << setfill('-') << setw(TABLE_LENGTH) << "";
 	header << setw(SETW_ID) << left << "Car ID" << setw(SETW_MODEL) << "Model" << setw(SETW_QUANTITY) << right << "Quantity" << setw(SETW_PRICE+1) << "Price\n" << endl;
@@ -97,12 +98,12 @@ int main() {
 	return 0;
 }
 
-void GetData(Record validRec[MAX_NUM_RECORDS], int& numValidRec, int& numInvalidRec, string errorFileName) {
-	string tempCarID, tempModel, errMsg = "";
+void GetData(CarRecord validRec[MAX_NUM_RECORDS], int& numValidRec, int& numInvalidRec, string errorFileName, string inputFileName) {
+	string tempCarID, tempModel, errMsg;
 	int tempQuantity;
 	double tempPrice;
 	bool isValidID, isValidModel, isValidQuantity, isValidPrice;
-	ifstream inFile("test.txt");
+	ifstream inFile(inputFileName);
 	ofstream errorFile(errorFileName);
 	if (!inFile) {
 		cout << "Input file not found. Exiting the program." << endl;
@@ -125,6 +126,7 @@ void GetData(Record validRec[MAX_NUM_RECORDS], int& numValidRec, int& numInvalid
 		tempCarID = ToUpper(tempCarID);
 		tempModel = ToUpper(tempModel);
 		errMsg = "";
+		//checks data from input file
 		isValidID = IsValidID(tempCarID, errMsg);
 		isValidModel = IsValidModel(tempModel, errMsg);
 		isValidQuantity = IsValidQuantity(tempQuantity, errMsg);
@@ -135,7 +137,7 @@ void GetData(Record validRec[MAX_NUM_RECORDS], int& numValidRec, int& numInvalid
 			numValidRec++;
 		}
 		else {
-			Record temp;
+			CarRecord temp;
 			temp.SetRecord(tempCarID, tempModel, tempQuantity, tempPrice);
 			errorFile << temp.ToString() << " " << errMsg << "\n";
 			numInvalidRec++;
@@ -148,12 +150,14 @@ void GetData(Record validRec[MAX_NUM_RECORDS], int& numValidRec, int& numInvalid
 	errorFile.close();
 }
 
-void PrintValidRecords(const Record validRec[MAX_NUM_RECORDS], int numValidRec, string border, string header) {
+void PrintValidRecords(const CarRecord validRec[MAX_NUM_RECORDS], int numValidRec, string border, string header) {
 	if (numValidRec == 0) {
 		cout << "\nNO VALID RECORDS FOUND.\n";
 	}
 	else {
-		cout << "\nDISPLAYING " << numValidRec << " VALID RECORDS(UNSORTED)...\n" << border << "\n" << header;
+		cout << "\nDISPLAYING " << numValidRec << " VALID RECORDS(UNSORTED)...\n" 
+			<< border << "\n" 
+			<< header;
 		for (int i = 0; i < numValidRec; i++) {
 			cout << validRec[i].ToString() << "\n";
 		}
@@ -185,36 +189,36 @@ void PrintInvalidRecords(string border, string header, string errorFileName, int
 }
 
 bool IsValidID(string carID, string& errorMessage) {
-	bool isIDCorrectLen = true, meetsIDCriteria1 = true, meetsIDCriteria2 = true, meetsIDCriteria3 = true;
+	bool meetsIDCriteria = true;
 	string idErrorMessage = "";
 	if (carID.length() != CORRECT_ID_LEN)
 	{
-		isIDCorrectLen = false;
+		meetsIDCriteria = false;
 		idErrorMessage += " Must be " + to_string(CORRECT_ID_LEN) + " characters long.";
 	}
 	else {
 		for (int i = 0; i < ID_CRIT_1_NUM_LETTERS; i++) {
 			char ch = carID[i];
 			if (!(((ch >= 'A') && (ch <= 'Z'))) || ch == 'O' || ch == 'o') { //checks if ID meets criteria 1
-				meetsIDCriteria1 = false;
-				idErrorMessage += " First " + to_string(ID_CRIT_1_NUM_LETTERS) + " characters must be Alpha(A - Z, letter O is not allowed).";
+				meetsIDCriteria = false;
+				idErrorMessage += " First " + to_string(ID_CRIT_1_NUM_LETTERS) + " characters must be Alpha(A-Z, letter O is not allowed).";
 				i = ID_CRIT_1_NUM_LETTERS;
 			}
 		}
 		for (int i = ID_CRIT_1_NUM_LETTERS; i < (ID_CRIT_1_NUM_LETTERS + ID_CRIT_2_NUM_ALPHANUMERIC); i++) { //checks if ID meets criteria 2
 			char ch = carID[i];
 			if (!((((ch >= 'A') && (ch <= 'Z'))) || ((ch >= '0') && (ch <= '9'))) || ch == 'O') {
-				meetsIDCriteria2 = false;
+				meetsIDCriteria = false;
 				idErrorMessage += " Characters " + to_string(ID_CRIT_1_NUM_LETTERS + 1) +
 					"-" + to_string(ID_CRIT_1_NUM_LETTERS + ID_CRIT_2_NUM_ALPHANUMERIC) +
-					" must be alphanumeric(A - Z, letter O is not allowed).";
+					" must be alphanumeric(A-Z, letter O is not allowed).";
 				i = ID_CRIT_1_NUM_LETTERS + ID_CRIT_2_NUM_ALPHANUMERIC;
 			}
 		}
 		for (int i = (ID_CRIT_1_NUM_LETTERS + ID_CRIT_2_NUM_ALPHANUMERIC); i < CORRECT_ID_LEN; i++) { //checks if ID meets criteria 3
 			char ch = carID[i];
 			if (!(ch >= '0' && ch <= '9')) {
-				meetsIDCriteria3 = false;
+				meetsIDCriteria = false;
 				idErrorMessage += " Characters " + to_string(ID_CRIT_1_NUM_LETTERS + ID_CRIT_2_NUM_ALPHANUMERIC + 1) +
 					"-" + to_string(CORRECT_ID_LEN) + " must be numeric (0-9).";
 				i = CORRECT_ID_LEN;
@@ -222,36 +226,36 @@ bool IsValidID(string carID, string& errorMessage) {
 		}
 	}
 
-	if (!(isIDCorrectLen && meetsIDCriteria1 && meetsIDCriteria2 && meetsIDCriteria3)) {
+	if (!meetsIDCriteria) {
 		errorMessage += "INVALID ID [" + idErrorMessage + "] ";  
 	}
-	return isIDCorrectLen && meetsIDCriteria1 && meetsIDCriteria2 && meetsIDCriteria3;
+	return meetsIDCriteria;
 }
 
 bool IsValidModel(string model, string& errorMessage) {
-	bool isModelMinLen = true, meetsModelCriteria1 = true, meetsModelCriteria2 = true;
+	bool meetsModelCriteria = true;
 	string modelErrorMessage = "";
 	if (model.length() < MIN_MODEL_LEN) {
-		isModelMinLen = false;
+		meetsModelCriteria = false;
 		modelErrorMessage +=  "Must be at least " + to_string(MIN_MODEL_LEN) + " characters long."; 
 	}
 	if (model[0] < 'A' || model[0] > 'Z') { //checks if Model meets criteria 1
-		meetsModelCriteria1 = false;
+		meetsModelCriteria = false;
 		modelErrorMessage += " Must start with a letter.";
 	}
 	int len = model.length();
 	for (int i = 1; i < len; i++) { //checks if Model meets criteria 2
 		char ch = model[i];
 		if (!((((ch >= 'A') && (ch <= 'Z'))) || ((ch >= '0') && (ch <= '9')))) {
-			meetsModelCriteria2 = false;
+			meetsModelCriteria = false;
 			modelErrorMessage += " Must consist of only alphanumeric characters.";
 			i = len;
 		}
 	}
-	if (!(isModelMinLen && meetsModelCriteria1 && meetsModelCriteria2)) {
+	if (!meetsModelCriteria) {
 		errorMessage += "INVALID MODEL [" + modelErrorMessage + "] ";
 	}
-	return isModelMinLen && meetsModelCriteria1 && meetsModelCriteria2;
+	return meetsModelCriteria;
 }
 
 bool IsValidQuantity(int quantity, string& errorMessage) {
@@ -273,7 +277,7 @@ string ToUpper(string str) {
 	for (int i = 0; i < str.length(); i++) {
 		char ch = str[i];
 		if (((ch >= 'a') && (ch <= 'z'))) {
-			ch -= ('a' - 'A'); //converts char to upper case
+			ch -= LETTER_OFFSET_IN_ASCII; //converts char to upper case
 		}
 		upperCaseStr += ch;
 	}
@@ -291,12 +295,13 @@ void ClearInvalidInput(string errMsg) {
 
 // TEST #1 (Some Valid and Invalid Data)
 /*
+
 MENU:
 1. PRINT VALID RECORDS
 2. PRINT INVALID RECORDS
 3. QUIT
 
-sdfdsa
+dgfffd
 
 INVALID MENU SELECTION
 
@@ -343,11 +348,11 @@ KHKQ95204      911                78      23145.00 INVALID MODEL [ Must start wi
 DW2NRB367      R:X                67          0.00 INVALID MODEL [ Must consist of only alphanumeric characters.] INVALID PRICE [Must be greater than $5000.]
 FU0R94012      2018CAMRY          -2       9999.00 INVALID MODEL [ Must start with a letter.] INVALID QUANTITY [Can't be less than 0.]
 XS4R45397      A4                 -4      -2342.00 INVALID MODEL [Must be at least 3 characters long.] INVALID QUANTITY [Can't be less than 0.] INVALID PRICE [Must be greater than $5000.]
-ALFOS5213      ROADSTER            2      12435.00 INVALID ID [ Characters 3-6 must be alphanumeric(A - Z, letter O is not allowed).]
-1B1293675      FOCUS             300       -324.00 INVALID ID [ First 2 characters must be Alpha(A - Z, letter O is not allowed).] INVALID PRICE [Must be greater than $5000.]
-123456789      CT250              -5      74829.00 INVALID ID [ First 2 characters must be Alpha(A - Z, letter O is not allowed).] INVALID QUANTITY [Can't be less than 0.]
+1LFOS52A3      ROADSTER            2      12435.00 INVALID ID [ First 2 characters must be Alpha(A-Z, letter O is not allowed). Characters 3-6 must be alphanumeric(A-Z, letter O is not allowed). Characters 7-9 must be numeric (0-9).]
+1B1293675      FOCUS             300       -324.00 INVALID ID [ First 2 characters must be Alpha(A-Z, letter O is not allowed).] INVALID PRICE [Must be greater than $5000.]
+123456789      CT250              -5      74829.00 INVALID ID [ First 2 characters must be Alpha(A-Z, letter O is not allowed).] INVALID QUANTITY [Can't be less than 0.]
 ABCDEFGHI      RAV4              -35         22.00 INVALID ID [ Characters 7-9 must be numeric (0-9).] INVALID QUANTITY [Can't be less than 0.] INVALID PRICE [Must be greater than $5000.]
-ALS;DA167      4RUBICON           92      30000.00 INVALID ID [ Characters 3-6 must be alphanumeric(A - Z, letter O is not allowed).] INVALID MODEL [ Must start with a letter.]
+ALS;DA167      4RUBICON           92      30000.00 INVALID ID [ Characters 3-6 must be alphanumeric(A-Z, letter O is not allowed).] INVALID MODEL [ Must start with a letter.]
 GH32HS1232     A2                  6     -24000.00 INVALID ID [ Must be 9 characters long.] INVALID MODEL [Must be at least 3 characters long.] INVALID PRICE [Must be greater than $5000.]
 VD234019P      M4                 -3      60000.00 INVALID ID [ Characters 7-9 must be numeric (0-9).] INVALID MODEL [Must be at least 3 characters long.] INVALID QUANTITY [Can't be less than 0.]
 ABCDED7121     2FX               -96         -5.00 INVALID ID [ Must be 9 characters long.] INVALID MODEL [ Must start with a letter.] INVALID QUANTITY [Can't be less than 0.] INVALID PRICE [Must be greater than $5000.]
@@ -362,9 +367,6 @@ MENU:
 3
 
 QUITTING...
-
-C:\Users\Abbas\source\repos\Lab1 Refresher\x64\Debug\Lab1 Refresher.exe (process 10644) exited with code 0.
-Press any key to close this window . . .
 */
 
 //TEST #2 (All invalid records)
