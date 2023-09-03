@@ -1,11 +1,10 @@
 #include <iostream>
 #include <fstream>
-#include <string>
 #include <iomanip>
 #include <sstream>
 
 using namespace std;
-const int MAX_NUM_RECORDS = 8, 
+const int MAX_NUM_RECORDS = 30, 
 	SETW_ID = 15, SETW_MODEL = 9, SETW_QUANTITY = 12, SETW_PRICE = 14, SETPRECISION = 2,
 	TABLE_LENGTH = SETW_ID + SETW_MODEL + SETW_PRICE + SETW_QUANTITY,
 	MIN_PRICE = 5000, MIN_QUANTITY = 0, MIN_MODEL_LEN = 3,
@@ -25,7 +24,7 @@ public:
 		price = cost;
 	}
 
-	string toString() const {
+	string ToString() const {
 		stringstream ss;
 		ss << setw(SETW_ID) << left << carID 
 			<< setw(SETW_MODEL) << model 
@@ -79,7 +78,7 @@ int main() {
 		cout << "\n\nMENU: \n"
 			"1. PRINT VALID RECORDS\n"
 			"2. PRINT INVALID RECORDS\n"
-			"3. QUIT\n" << endl;
+			"3. QUIT\n\n";
 		cin >> userChoice;
 		switch (userChoice) {
 		case PRINT_VALID:
@@ -100,12 +99,11 @@ int main() {
 
 void GetData(Record validRec[MAX_NUM_RECORDS], int& numValidRec, int& numInvalidRec, string errorFileName) {
 	string tempCarID, tempModel, errMsg = "";
-	int tempQuantityOnHand;
+	int tempQuantity;
 	double tempPrice;
 	bool isValidID, isValidModel, isValidQuantity, isValidPrice;
 	ifstream inFile("test.txt");
 	ofstream errorFile(errorFileName);
-	Record temp;
 	if (!inFile) {
 		cout << "Input file not found. Exiting the program." << endl;
 		system("pause");
@@ -123,32 +121,28 @@ void GetData(Record validRec[MAX_NUM_RECORDS], int& numValidRec, int& numInvalid
 		exit(EXIT_FAILURE);
 	}
 	while (!inFile.eof() && numValidRec < MAX_NUM_RECORDS) { 
-		inFile >> tempCarID >> tempModel >> tempQuantityOnHand >> tempPrice;
-
+		inFile >> tempCarID >> tempModel >> tempQuantity >> tempPrice;
 		tempCarID = ToUpper(tempCarID);
 		tempModel = ToUpper(tempModel);
-
 		errMsg = "";
 		isValidID = IsValidID(tempCarID, errMsg);
 		isValidModel = IsValidModel(tempModel, errMsg);
-		isValidQuantity = IsValidQuantity(tempQuantityOnHand, errMsg);
+		isValidQuantity = IsValidQuantity(tempQuantity, errMsg);
 		isValidPrice = IsValidPrice(tempPrice, errMsg);
 
 		if (isValidID && isValidModel && isValidQuantity && isValidPrice) { //separates valid and invalid records
-			validRec[numValidRec].SetRecord(tempCarID, tempModel, tempQuantityOnHand, tempPrice);
+			validRec[numValidRec].SetRecord(tempCarID, tempModel, tempQuantity, tempPrice);
 			numValidRec++;
 		}
 		else {
-			/*errorFile << setw(SETW_ID) << left << tempCarID  << setw(SETW_MODEL) << tempModel << setw(SETW_QUANTITY) << right 
-				<< tempQuantityOnHand  << setw(SETW_PRICE) << fixed << setprecision(SETPRECISION) << tempPrice << " " << errMsg << endl;*/
-			temp.SetRecord(tempCarID, tempModel, tempQuantityOnHand, tempPrice);
-			errorFile << temp.toString() << " " << errMsg << endl;
+			Record temp;
+			temp.SetRecord(tempCarID, tempModel, tempQuantity, tempPrice);
+			errorFile << temp.ToString() << " " << errMsg << "\n";
 			numInvalidRec++;
 		}
 	}
-
 	if (numValidRec == MAX_NUM_RECORDS && !inFile.eof()) {
-		cout << "Not all Records have been stored; only the first " << MAX_NUM_RECORDS << " were processed." << endl;
+		cout << "Not all Records have been stored; only the first " << MAX_NUM_RECORDS << " were processed." << "\n";
 	}
 	inFile.close();
 	errorFile.close();
@@ -159,10 +153,9 @@ void PrintValidRecords(const Record validRec[MAX_NUM_RECORDS], int numValidRec, 
 		cout << "\nNO VALID RECORDS FOUND.\n";
 	}
 	else {
-		cout << "\nDISPLAYING " << numValidRec << " VALID RECORDS(UNSORTED)...\n";
-		cout << border << "\n" << header;
+		cout << "\nDISPLAYING " << numValidRec << " VALID RECORDS(UNSORTED)...\n" << border << "\n" << header;
 		for (int i = 0; i < numValidRec; i++) {
-			cout << validRec[i].toString() << endl;
+			cout << validRec[i].ToString() << "\n";
 		}
 		cout << border << "\n";
 	}
@@ -184,9 +177,9 @@ void PrintInvalidRecords(string border, string header, string errorFileName, int
 			<< header;
 		string line;
 		while (getline(invalidRecFile, line)) {
-			cout << line << endl;
+			cout << line << "\n";
 		}
-		cout << border << endl;
+		cout << border << "\n";
 	}
 	invalidRecFile.close();
 }
@@ -223,8 +216,7 @@ bool IsValidID(string carID, string& errorMessage) {
 			if (!(ch >= '0' && ch <= '9')) {
 				meetsIDCriteria3 = false;
 				idErrorMessage += " Characters " + to_string(ID_CRIT_1_NUM_LETTERS + ID_CRIT_2_NUM_ALPHANUMERIC + 1) +
-					"-" + to_string(CORRECT_ID_LEN) +
-					" must be numeric (0-9).";
+					"-" + to_string(CORRECT_ID_LEN) + " must be numeric (0-9).";
 				i = CORRECT_ID_LEN;
 			}
 		}
@@ -290,7 +282,7 @@ string ToUpper(string str) {
 }
 
 void ClearInvalidInput(string errMsg) {
-	cout << "\n" << errMsg << endl;
+	cout << "\n" << errMsg << "\n";
 	cin.clear();
 	cin.ignore(numeric_limits<streamsize>::max(), '\n');
 }
