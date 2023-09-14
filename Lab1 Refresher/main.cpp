@@ -2,15 +2,16 @@
 #include <fstream>
 #include <iomanip>
 #include <sstream>
+#include <limits>
 
 using namespace std;
-const int MAX_NUM_RECORDS = 30, 
-	SETW_ID = 15, SETW_MODEL = 9, SETW_QUANTITY = 12, SETW_PRICE = 14, SETPRECISION = 2,
-	TABLE_LENGTH = SETW_ID + SETW_MODEL + SETW_PRICE + SETW_QUANTITY,
-	MIN_PRICE = 5000, MIN_QUANTITY = 0, MIN_MODEL_LEN = 3,
-	ID_CRIT_1_NUM_LETTERS = 2, ID_CRIT_2_NUM_ALPHANUMERIC = 4, ID_CRIT_3_NUM_DIGITS = 3,
-	CORRECT_ID_LEN = ID_CRIT_1_NUM_LETTERS + ID_CRIT_2_NUM_ALPHANUMERIC + ID_CRIT_3_NUM_DIGITS,
-	LETTER_OFFSET_IN_ASCII = 32;
+const int MAX_NUM_RECORDS = 30,
+SETW_ID = 15, SETW_MODEL = 9, SETW_QUANTITY = 12, SETW_PRICE = 14, SETPRECISION = 2,
+TABLE_LENGTH = SETW_ID + SETW_MODEL + SETW_PRICE + SETW_QUANTITY,
+MIN_PRICE = 5000, MIN_QUANTITY = 0, MIN_MODEL_LEN = 3,
+ID_CRIT_1_NUM_LETTERS = 2, ID_CRIT_2_NUM_ALPHANUMERIC = 4, ID_CRIT_3_NUM_DIGITS = 3,
+CORRECT_ID_LEN = ID_CRIT_1_NUM_LETTERS + ID_CRIT_2_NUM_ALPHANUMERIC + ID_CRIT_3_NUM_DIGITS,
+LETTER_OFFSET_IN_ASCII = 32;
 
 class CarRecord {
 public:
@@ -18,21 +19,9 @@ public:
 		SetRecord("", "", 0, 0);
 	}
 
-	void SetRecord(string ID, string modelName, int quantityOnHand, double cost) {
-		carID = ID;
-		model = modelName;
-		quantity = quantityOnHand;
-		price = cost;
-	}
+	void SetRecord(string ID, string modelName, int quantityOnHand, double cost);
 
-	string ToString() const {
-		stringstream ss;
-		ss << setw(SETW_ID) << left << carID 
-			<< setw(SETW_MODEL) << model 
-			<< setw(SETW_QUANTITY) << right << quantity 
-			<< setw(SETW_PRICE) << fixed << setprecision(SETPRECISION) << price;
-		return ss.str();
-	}
+	string ToString() const; //returns formatted output as a string
 
 private:
 	string carID, model;
@@ -45,10 +34,10 @@ enum Menu {
 };
 
 //Gets the data from the input file and writes all invalid data to error file
-void GetData(CarRecord validRec[MAX_NUM_RECORDS], int& numValidRec, int& numInvalidRec, string errorFileName, string inputFileName);
+void GetData(CarRecord validRec[], int& numValidRec, int& numInvalidRec, string errorFileName, string inputFileName);
 
 //prints valid records to screen in table format
-void PrintValidRecords(const CarRecord validRec[MAX_NUM_RECORDS], int numValidRec, string border, string header); 
+void PrintValidRecords(const CarRecord validRec[], int numValidRec, string border, string header);
 
 //prints invalid records to screen in table format
 void PrintInvalidRecords(string border, string header, string errorFileName, int numInvalid);
@@ -61,6 +50,8 @@ bool IsValidQuantity(int quantity, string& errorMessage); //checks if the quanti
 
 bool IsValidPrice(double price, string& errorMessage); //checks if the price is valid
 
+bool IsValidRecord(string id, string model, int quantity, double price, string& errMsg); //checks if the record is valid
+
 string ToUpper(string str); //returns string converted to upper case
 
 void ClearInvalidInput(string errMsg); //clears cin, clears the keyboard buffer, prints an error message
@@ -71,10 +62,10 @@ int main() {
 	CarRecord validRecords[MAX_NUM_RECORDS];
 	string inputFileName = "test.txt", errorFileName = "InvalidRecords.txt";
 	GetData(validRecords, numValidRec, numInvalidRec, errorFileName, inputFileName);
-	
+
 	border << setfill('-') << setw(TABLE_LENGTH) << "";
-	header << setw(SETW_ID) << left << "Car ID" << setw(SETW_MODEL) << "Model" << setw(SETW_QUANTITY) << right << "Quantity" << setw(SETW_PRICE+1) << "Price\n" << endl;
-	
+	header << setw(SETW_ID) << left << "Car ID" << setw(SETW_MODEL) << "Model" << setw(SETW_QUANTITY) << right << "Quantity" << setw(SETW_PRICE + 1) << "Price\n" << endl;
+
 	do {
 		cout << "\n\nMENU: \n"
 			"1. PRINT VALID RECORDS\n"
@@ -98,48 +89,53 @@ int main() {
 	return 0;
 }
 
-void GetData(CarRecord validRec[MAX_NUM_RECORDS], int& numValidRec, int& numInvalidRec, string errorFileName, string inputFileName) {
+void CarRecord::SetRecord(string ID, string modelName, int quantityOnHand, double cost) {
+	carID = ID;
+	model = modelName;
+	quantity = quantityOnHand;
+	price = cost;
+}
+
+string CarRecord::ToString() const {
+	stringstream ss;
+	ss << setw(SETW_ID) << left << carID
+		<< setw(SETW_MODEL) << model
+		<< setw(SETW_QUANTITY) << right << quantity
+		<< setw(SETW_PRICE) << fixed << setprecision(SETPRECISION) << price;
+	return ss.str();
+}
+
+void GetData(CarRecord validRec[], int& numValidRec, int& numInvalidRec, string errorFileName, string inputFileName) {
 	string tempCarID, tempModel, errMsg;
 	int tempQuantity;
 	double tempPrice;
-	bool isValidID, isValidModel, isValidQuantity, isValidPrice;
 	ifstream inFile(inputFileName);
 	ofstream errorFile(errorFileName);
 	if (!inFile) {
 		cout << "Input file not found. Exiting the program." << endl;
 		system("pause");
 		exit(EXIT_FAILURE);
-	}	
-	if (!errorFile) {
-		cout << "Error file not found. Exiting the program." << endl;
+	}
+	if (inFile.peek() == EOF) {
+		cout << "The input file is empty. Quitting the program." << endl;
 		inFile.close();
 		system("pause");
 		exit(EXIT_FAILURE);
 	}
-	if (inFile.peek() == EOF) {
-		cout << "The input file is empty. Quitting the program." << endl;
-		system("pause");
-		exit(EXIT_FAILURE);
-	}
-	while (!inFile.eof() && numValidRec < MAX_NUM_RECORDS) { 
+	while (!inFile.eof() && numValidRec < MAX_NUM_RECORDS) {
 		inFile >> tempCarID >> tempModel >> tempQuantity >> tempPrice;
 		tempCarID = ToUpper(tempCarID);
 		tempModel = ToUpper(tempModel);
 		errMsg = "";
-		//checks data from input file
-		isValidID = IsValidID(tempCarID, errMsg);
-		isValidModel = IsValidModel(tempModel, errMsg);
-		isValidQuantity = IsValidQuantity(tempQuantity, errMsg);
-		isValidPrice = IsValidPrice(tempPrice, errMsg);
-
-		if (isValidID && isValidModel && isValidQuantity && isValidPrice) { //separates valid and invalid records
+		if (IsValidRecord(tempCarID, tempModel, tempQuantity, tempPrice, errMsg)) { //separates valid and invalid records
 			validRec[numValidRec].SetRecord(tempCarID, tempModel, tempQuantity, tempPrice);
 			numValidRec++;
 		}
 		else {
-			CarRecord temp;
-			temp.SetRecord(tempCarID, tempModel, tempQuantity, tempPrice);
-			errorFile << temp.ToString() << " " << errMsg << "\n";
+			errorFile << setw(SETW_ID) << left << tempCarID
+				<< setw(SETW_MODEL) << tempModel
+				<< setw(SETW_QUANTITY) << right << tempQuantity
+				<< setw(SETW_PRICE) << fixed << setprecision(SETPRECISION) << tempPrice << " " << errMsg << "\n";
 			numInvalidRec++;
 		}
 	}
@@ -150,13 +146,13 @@ void GetData(CarRecord validRec[MAX_NUM_RECORDS], int& numValidRec, int& numInva
 	errorFile.close();
 }
 
-void PrintValidRecords(const CarRecord validRec[MAX_NUM_RECORDS], int numValidRec, string border, string header) {
+void PrintValidRecords(const CarRecord validRec[], int numValidRec, string border, string header) {
 	if (numValidRec == 0) {
 		cout << "\nNO VALID RECORDS FOUND.\n";
 	}
 	else {
-		cout << "\nDISPLAYING " << numValidRec << " VALID RECORDS(UNSORTED)...\n" 
-			<< border << "\n" 
+		cout << "\nDISPLAYING " << numValidRec << " VALID RECORDS(UNSORTED)...\n"
+			<< border << "\n"
 			<< header;
 		for (int i = 0; i < numValidRec; i++) {
 			cout << validRec[i].ToString() << "\n";
@@ -167,17 +163,12 @@ void PrintValidRecords(const CarRecord validRec[MAX_NUM_RECORDS], int numValidRe
 
 void PrintInvalidRecords(string border, string header, string errorFileName, int numInvalidRec) {
 	ifstream invalidRecFile(errorFileName);
-	if (!invalidRecFile) {
-		cout << "Invalid Records file not found. Exiting the program." << endl;
-		system("pause");
-		exit(EXIT_FAILURE);
-	}
-	if (invalidRecFile.peek() == EOF) { 
+	if (invalidRecFile.peek() == EOF) {
 		cout << "\nNO INVALID RECORDS FOUND\n";
 	}
 	else {
-		cout << "\nDISPLAYING " << numInvalidRec << " INVALID RECORDS...\n" 
-			<< border << "\n" 
+		cout << "\nDISPLAYING " << numInvalidRec << " INVALID RECORDS...\n"
+			<< border << "\n"
 			<< header;
 		string line;
 		while (getline(invalidRecFile, line)) {
@@ -227,7 +218,7 @@ bool IsValidID(string carID, string& errorMessage) {
 	}
 
 	if (!meetsIDCriteria) {
-		errorMessage += "INVALID ID [" + idErrorMessage + "] ";  
+		errorMessage += "INVALID ID [" + idErrorMessage + "] ";
 	}
 	return meetsIDCriteria;
 }
@@ -237,7 +228,7 @@ bool IsValidModel(string model, string& errorMessage) {
 	string modelErrorMessage = "";
 	if (model.length() < MIN_MODEL_LEN) {
 		meetsModelCriteria = false;
-		modelErrorMessage +=  "Must be at least " + to_string(MIN_MODEL_LEN) + " characters long."; 
+		modelErrorMessage += "Must be at least " + to_string(MIN_MODEL_LEN) + " characters long.";
 	}
 	if (model[0] < 'A' || model[0] > 'Z') { //checks if Model meets criteria 1
 		meetsModelCriteria = false;
@@ -270,6 +261,17 @@ bool IsValidPrice(double price, string& errorMessage) {
 		errorMessage += "INVALID PRICE [Must be greater than $" + to_string(MIN_PRICE) + ".] ";
 	}
 	return price > MIN_PRICE;
+}
+
+bool IsValidRecord(string id, string model, int quantity, double price, string& errMsg) {
+	bool isValidID, isValidModel, isValidQuantity, isValidPrice;
+
+	isValidID = IsValidID(id, errMsg);
+	isValidModel = IsValidModel(model, errMsg);
+	isValidQuantity = IsValidQuantity(quantity, errMsg);
+	isValidPrice = IsValidPrice(price, errMsg);
+
+	return isValidID && isValidModel && isValidQuantity && isValidPrice;
 }
 
 string ToUpper(string str) {
@@ -344,7 +346,7 @@ Car ID         Model        Quantity         Price
 PSUSVF195      WRANGLER            7       1000.00 INVALID PRICE [Must be greater than $5000.]
 CB6P96365      ESCALADE           -1      99999.99 INVALID QUANTITY [Can't be less than 0.]
 ML8W6S179      JETTA              -4        234.00 INVALID QUANTITY [Can't be less than 0.] INVALID PRICE [Must be greater than $5000.]
-KHKQ95204      911                78      23145.00 INVALID MODEL [ Must start with a letter.]
+KHKQ95204      9;                 78      23145.00 INVALID MODEL [Must be at least 3 characters long. Must start with a letter. Must consist of only alphanumeric characters.]
 DW2NRB367      R:X                67          0.00 INVALID MODEL [ Must consist of only alphanumeric characters.] INVALID PRICE [Must be greater than $5000.]
 FU0R94012      2018CAMRY          -2       9999.00 INVALID MODEL [ Must start with a letter.] INVALID QUANTITY [Can't be less than 0.]
 XS4R45397      A4                 -4      -2342.00 INVALID MODEL [Must be at least 3 characters long.] INVALID QUANTITY [Can't be less than 0.] INVALID PRICE [Must be greater than $5000.]
@@ -450,7 +452,7 @@ Car ID         Model        Quantity         Price
 PSUSVF195      WRANGLER            7       1000.00 INVALID PRICE [Must be greater than $5000.]
 CB6P96365      ESCALADE           -1      99999.99 INVALID QUANTITY [Can't be less than 0.]
 ML8W6S179      JETTA              -4        234.00 INVALID QUANTITY [Can't be less than 0.] INVALID PRICE [Must be greater than $5000.]
-KHKQ95204      911                78      23145.00 INVALID MODEL [ Must start with a letter.]
+KHKQ95204      9;                 78      23145.00 INVALID MODEL [Must be at least 3 characters long. Must start with a letter. Must consist of only alphanumeric characters.]
 DW2NRB367      R:X                67          0.00 INVALID MODEL [ Must consist of only alphanumeric characters.] INVALID PRICE [Must be greater than $5000.]
 FU0R94012      2018CAMRY          -2       9999.00 INVALID MODEL [ Must start with a letter.] INVALID QUANTITY [Can't be less than 0.]
 XS4R45397      A4                 -4      -2342.00 INVALID MODEL [Must be at least 3 characters long.] INVALID QUANTITY [Can't be less than 0.] INVALID PRICE [Must be greater than $5000.]

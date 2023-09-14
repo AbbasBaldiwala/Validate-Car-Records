@@ -1,7 +1,7 @@
 PSUSVF195      WRANGLER            7       1000.00 INVALID PRICE [Must be greater than $5000.] 
 CB6P96365      ESCALADE           -1      99999.99 INVALID QUANTITY [Can't be less than 0.] 
 ML8W6S179      JETTA              -4        234.00 INVALID QUANTITY [Can't be less than 0.] INVALID PRICE [Must be greater than $5000.] 
-KHKQ95204      911                78      23145.00 INVALID MODEL [ Must start with a letter.] 
+KHKQ95204      9;                 78      23145.00 INVALID MODEL [Must be at least 3 characters long. Must start with a letter. Must consist of only alphanumeric characters.] 
 DW2NRB367      R:X                67          0.00 INVALID MODEL [ Must consist of only alphanumeric characters.] INVALID PRICE [Must be greater than $5000.] 
 FU0R94012      2018CAMRY          -2       9999.00 INVALID MODEL [ Must start with a letter.] INVALID QUANTITY [Can't be less than 0.] 
 XS4R45397      A4                 -4      -2342.00 INVALID MODEL [Must be at least 3 characters long.] INVALID QUANTITY [Can't be less than 0.] INVALID PRICE [Must be greater than $5000.] 
